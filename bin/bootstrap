@@ -51,10 +51,12 @@ EOF
 sub have_docker_compose {
     # Try new syntax first
     my $out = qx(docker compose version 2>&1);
+    $out = '' unless defined $out;
     return 1 if $out =~ /Docker Compose/;
 
     # Fallback to classic script
     $out = qx(docker-compose version 2>&1);
+    $out = '' unless defined $out;
     return 1 if $out =~ /docker-compose version/;
 
     return 0;
