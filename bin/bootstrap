@@ -33,6 +33,7 @@ EOF
 # --- Step 1.2: Detect Docker ---
 sub have_docker {
     my $out = qx(docker --version 2>&1);
+    $out = '' unless defined $out;
     return $out =~ /Docker version/;
 }
 
@@ -81,6 +82,7 @@ sub php_version_ok {
     my @php_cmds = ("$ENV{PWD}/opt/php/bin/php", "php");
     foreach my $cmd (@php_cmds) {
         my $out = qx($cmd -v 2>&1);
+        next unless defined $out && length $out;
         if ($out =~ /PHP (\d+)\.(\d+)\.(\d+)/) {
             my ($major, $minor) = ($1, $2);
             return 1 if ($major > 8 || ($major == 8 && $minor >= 2));
@@ -106,6 +108,7 @@ sub have_composer {
         || scalar(grep { -x "$_\/composer" } split /$Config{path_sep}/, $ENV{PATH})
         || do {
             my $out = qx(composer --version 2>&1);
+            $out = '' unless defined $out;
             $out =~ /Composer version/;
         };
 }
@@ -147,7 +150,6 @@ unless (-e $cpanfile) {
     die "❌ No cpanfile found in current directory ($ENV{PWD}). Aborting.\n";
 }
 
-
 # --- Step 4: Check if using local::lib or root ---
 my $is_local_lib = $ENV{PERL_MM_OPT} || $ENV{PERL_LOCAL_LIB_ROOT};
 my $is_root = $> == 0;
@@ -172,7 +174,6 @@ WARN
     sleep 25;
 }
 
-
 # --- Step 5: Run cpanm --installdeps ---
 print "📦 Installing Perl dependencies from cpanfile...\n";
 my $cwd = getcwd();
@@ -181,7 +182,6 @@ system($cpanm, '--installdeps', '--notest', $cwd) == 0
 
 print "✅ All dependencies installed successfully.\n";
 
-
 # --- Step 6: After install, check Perl/local::lib visibility ---
 my $local_lib_path = "$ENV{HOME}/perl5/lib/perl5";
 my $local_bin_path = "$ENV{HOME}/perl5/bin";
@@ -189,6 +189,7 @@ my $warned_local_lib = 0;
 
 if (-d $local_lib_path) {
     my $inc_output = qx($^X -e "print join(qq{\\n}, \@INC), qq{\\n}" 2>/dev/null);
+    $inc_output = '' unless defined $inc_output;
     my $lib_in_inc = ($inc_output =~ /\Q$local_lib_path\E/);
     my $bin_in_path = grep { $_ eq $local_bin_path } split /$Config{path_sep}/, $ENV{PATH};
 
@@ -214,6 +215,6 @@ if (-d $local_lib_path) {
 ===============================================================
 
 EOW
-        sleep 2;
+
     }
 }
