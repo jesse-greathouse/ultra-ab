@@ -806,6 +806,9 @@ sub prompt_finalize {
 }
 
 sub prompt_finalize_docker {
+    open(my $fh1, '>>', "$logDir/error.log"); close($fh1);
+    open(my $fh2, '>>', "$logDir/access.log"); close($fh2);
+
     my $wp_admin_url = $cfg{wordpress}{SITE_URL} . "/wp-admin";
 
     print "\n=================================================================\n";

@@ -660,7 +660,8 @@ sub wordpress_composer_install {
     my $webDir           = "$applicationRoot/web/wp-content";
     my $binDir           = "$applicationRoot/bin";
     my $optDir           = "$applicationRoot/opt";
-    my $php              = "$optDir/php/bin/php";
+    my $php_local        = "$php_dir/php";
+    my $php              = (-x $php_local) ? $php_local : "php";
     my $composer         = "$binDir/composer";
 
     my @paths_to_check = (
@@ -670,10 +671,6 @@ sub wordpress_composer_install {
     );
 
     my @composer_targets;
-
-    unless (-x $php) {
-        die "❌ PHP binary not found or not executable: $php\n";
-    }
 
     unless (-f $composer) {
         die "❌ Composer binary not found at: $composer\n";
