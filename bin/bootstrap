@@ -30,6 +30,95 @@ Please install a recent version of Perl:
 EOF
 }
 
+# --- Step 1.2: Detect Docker ---
+sub have_docker {
+    my $out = qx(docker --version 2>&1);
+    return $out =~ /Docker version/;
+}
+
+unless (have_docker()) {
+    die <<"EOF";
+
+❌ Docker is not installed or not in your PATH.
+
+To install Docker, follow instructions for your OS:
+  → https://docs.docker.com/get-docker/
+
+EOF
+}
+
+# --- Step 1.2.1: Detect Docker Compose ---
+sub have_docker_compose {
+    # Try new syntax first
+    my $out = qx(docker compose version 2>&1);
+    return 1 if $out =~ /Docker Compose/;
+
+    # Fallback to classic script
+    $out = qx(docker-compose version 2>&1);
+    return 1 if $out =~ /docker-compose version/;
+
+    return 0;
+}
+
+unless (have_docker_compose()) {
+    die <<"EOF";
+
+❌ Docker Compose is not installed or not in your PATH.
+
+To install Docker Compose, follow instructions for your OS:
+  → https://docs.docker.com/compose/install/
+
+On modern Docker, 'docker compose' is preferred.
+On older setups, you may need the 'docker-compose' command.
+
+EOF
+}
+
+# --- Step 1.3: Detect PHP 8.2+ ---
+sub php_version_ok {
+    my @php_cmds = ("$ENV{PWD}/opt/php/bin/php", "php");
+    foreach my $cmd (@php_cmds) {
+        my $out = qx($cmd -v 2>&1);
+        if ($out =~ /PHP (\d+)\.(\d+)\.(\d+)/) {
+            my ($major, $minor) = ($1, $2);
+            return 1 if ($major > 8 || ($major == 8 && $minor >= 2));
+        }
+    }
+    return 0;
+}
+
+unless (php_version_ok()) {
+    die <<"EOF";
+
+❌ PHP 8.2 or higher is required.
+
+Recommended:
+  - Install the "php8.4" system package
+
+EOF
+}
+
+# --- Step 1.4: Detect Composer ---
+sub have_composer {
+    return -x "$ENV{PWD}/bin/composer"
+        || scalar(grep { -x "$_\/composer" } split /$Config{path_sep}/, $ENV{PATH})
+        || do {
+            my $out = qx(composer --version 2>&1);
+            $out =~ /Composer version/;
+        };
+}
+
+unless (have_composer()) {
+    die <<"EOF";
+
+❌ Composer is not installed or not in your PATH.
+
+To install Composer, run:
+    bin/install --composer
+
+EOF
+}
+
 # --- Step 2: Locate cpanm ---
 my $cpanm = find_in_path('cpanm')
     || find_in_path('cpanm', "$ENV{HOME}/perl5/bin");
