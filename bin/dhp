@@ -16,7 +16,7 @@ my $applicationRoot = abs_path(dirname($binDir));
 my $etc             = "$applicationRoot/etc";
 
 # Defaults
-my $bitDepth  = 3072;
+my $bitDepth  = 2048;
 my $overwrite = 0;
 
 # Parse CLI args
