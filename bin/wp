@@ -25,10 +25,9 @@ my $web    = "$applicationRoot/web";
 my $log_path   = "$var/log";
 my $cache_path = "$var/cache";
 my $php_dir    = "$opt/php/bin";
-my $php_path   = "$php_dir/php";
+my $php_local  = "$php_dir/php";
+my $php_path   = (-x $php_local) ? $php_local : "php";
 my $wp_cli     = "$web/vendor/wp-cli/wp-cli/php/boot-fs.php";  # PHP entry point
-
-die "PHP executable not found at $php_path\n" unless -x $php_path;
 
 # Validate wp-cli existence and executable bit
 unless (-f $wp_cli) {

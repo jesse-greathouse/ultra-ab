@@ -54,6 +54,15 @@ sub docker_is_available {
 }
 
 sub docker_db_up {
+    # --- Ensure shared directories are writable for Docker containers ---
+    for my $dir (qw(tmp var)) {
+        if (-d $dir) {
+            chmod 0777, $dir or warn "⚠️  Failed to chmod $dir to 777: $!";
+        } else {
+            warn "⚠️  Directory $dir does not exist; skipping chmod.";
+        }
+    }
+
     unless (docker_is_available()) {
         croak "❌ Docker is not available or not installed. Aborting.\n";
     }
