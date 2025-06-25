@@ -660,7 +660,7 @@ sub wordpress_composer_install {
     my $webDir           = "$applicationRoot/web/wp-content";
     my $binDir           = "$applicationRoot/bin";
     my $optDir           = "$applicationRoot/opt";
-    my $php_local        = "$php_dir/php";
+    my $php_local        = "$optDir/php/bin/php";
     my $php              = (-x $php_local) ? $php_local : "php";
     my $composer         = "$binDir/composer";
 
