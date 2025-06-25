@@ -33,19 +33,36 @@ if ($node_cmd) {
 # Determine if install is needed
 if (!$actual_version || $actual_version ne $expected_node_version) {
     print "Node.js $expected_node_version not detected (found: '$actual_version')\n";
+    print "Attempting to install Node.js $expected_node_version using bin/install --node...\n";
+    my $install_node_cmd = "$binDir/install --node";
+    system($install_node_cmd) == 0 or warn "Warning: 'bin/install --node' failed.\n";
 
-    if ($non_interactive) {
-        print "Running install_node in non-interactive mode...\n";
-        install_node($applicationRoot);
+    # Re-detect node version after attempted install
+    $node_cmd = `bash -c 'command -v node'`;
+    chomp $node_cmd;
+    $actual_version = '';
+    if ($node_cmd) {
+        $actual_version = `bash -c 'node -v'`;
+        chomp $actual_version;
+    }
+
+    if ($actual_version eq $expected_node_version) {
+        print "✅ Node.js $expected_node_version is now active.\n";
     } else {
-        print "Would you like to install Node.js $expected_node_version using NVM? [y/N]: ";
-        my $response = <STDIN>;
-        chomp $response;
-        if ($response =~ /^y(es)?$/i) {
-            install_node($applicationRoot);
-        } else {
+        print "Node.js $expected_node_version still not detected (found: '$actual_version')\n";
+        if ($non_interactive) {
             print "Aborting build. Required Node.js version not installed.\n";
             exit 1;
+        } else {
+            print "Would you like to try installing Node.js $expected_node_version interactively using NVM? [y/N]: ";
+            my $response = <STDIN>;
+            chomp $response;
+            if ($response =~ /^y(es)?$/i) {
+                install_node($applicationRoot);
+            } else {
+                print "Aborting build. Required Node.js version not installed.\n";
+                exit 1;
+            }
         }
     }
 } else {
