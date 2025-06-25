@@ -1,0 +1,34 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use File::Basename;
+use File::Copy qw(copy);
+use Template;
+use Cwd qw(abs_path);
+use lib dirname(abs_path(__FILE__)) . "/modules";
+use UltraAB::Config qw(get_configuration);
+
+warn $@ if $@;
+
+my %cfg = get_configuration();
+
+my $meta            = $cfg{meta};
+my $applicationRoot = $meta->{DIR} // die "Missing DIR path in configuration";
+my $etcDir          = $meta->{ETC} // die "Missing ETC path in configuration";
+
+my $dockerComposeTpl  = "$etcDir/docker-compose.yml.tt";
+my $dockerComposeFile = "$applicationRoot/docker-compose.yml";
+my $dockerComposeBak  = "$applicationRoot/docker-compose.bak.yml";
+
+# Save a backup of the old docker-compose.yml to docker-compose.bak.yml
+copy($dockerComposeFile, $dockerComposeBak) if -e $dockerComposeFile;
+
+unlink $dockerComposeFile if -e $dockerComposeFile;
+
+my $tt = Template->new({ ABSOLUTE => 1, RELATIVE => 1 }) or die "$Template::ERROR\n";
+
+$tt->process($dockerComposeTpl, \%cfg, $dockerComposeFile)
+    or die $tt->error(), "\n";
+
+print "✅ Docker Compose file generated successfully: $dockerComposeFile\n";

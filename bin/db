@@ -1,0 +1,27 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use File::Basename qw(dirname);
+use Cwd qw(abs_path);
+
+use lib(dirname(abs_path(__FILE__)) . "/modules");
+use UltraAB::Config qw(get_configuration);
+use UltraAB::Db qw(run_in_docker run_with_perl_dbi);
+
+my %cfg = get_configuration();
+
+my $mode = shift @ARGV or die "Usage: $0 <mode> [args]\nModes: run <sql-file>\n";
+my $is_docker = $cfg{meta}{IS_DOCKER} // 0;
+
+if ($mode eq 'run') {
+    my $sqlfile = shift @ARGV or die "Usage: $0 run <sql-file>\n";
+
+    if ($is_docker) {
+        run_in_docker(\%cfg, $sqlfile);
+    } else {
+        run_with_perl_dbi(\%cfg, $sqlfile);
+    }
+    exit 0;
+}
+
+die "Unknown mode: $mode\n";

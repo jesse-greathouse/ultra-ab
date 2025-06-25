@@ -1,0 +1,55 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Config;
+use Cwd qw(getcwd);
+
+# --- Step 1: Check Perl version ---
+if ($] < 5.008) {
+    die <<"EOF";
+
+❌ Perl 5.8 or higher is required, but you are running version $].
+
+Please install a recent version of Perl:
+
+  → https://www.perl.org/get.html
+
+EOF
+}
+
+# --- Step 2: Locate cpanm ---
+my $cpanm = find_in_path('cpanm');
+unless ($cpanm) {
+    die <<"EOF";
+
+❌ cpanm (App::cpanminus) is not installed or not in your PATH.
+
+To install it, run:
+
+  curl -L https://cpanmin.us | perl - --sudo App::cpanminus
+
+Or visit:
+
+  → https://metacpan.org/pod/App::cpanminus
+
+EOF
+}
+
+# --- Step 3: Run cpanm --installdeps ---
+print "📦 Installing Perl dependencies from cpanfile...\n";
+my $cwd = getcwd();
+system($cpanm, '--installdeps', $cwd) == 0
+    or die "❌ Failed to install dependencies with cpanm.\n";
+
+print "✅ All dependencies installed successfully.\n";
+
+# --- Utility: find_in_path ---
+sub find_in_path {
+    my ($prog) = @_;
+    for my $dir (split /$Config{path_sep}/, $ENV{PATH}) {
+        my $full = "$dir/$prog";
+        return $full if -x $full;
+    }
+    return undef;
+}

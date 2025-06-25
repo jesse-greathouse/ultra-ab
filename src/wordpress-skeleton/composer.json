@@ -1,0 +1,18 @@
+{
+  "name": "jesse-greathouse/ultra-ab-wordpress-skeleton",
+  "description": "Used for setting up development dependencies for a WordPress Site.",
+  "homepage": "https://github.com/jesse-greathouse/ultra-ab",
+  "license": "Proprietary",
+  "require": {
+    "php": ">=8.0"
+  },
+  "require-dev": {
+    "dealerdirect/phpcodesniffer-composer-installer": "^0.7",
+    "phpcompatibility/phpcompatibility-wp": "^2"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  }
+}

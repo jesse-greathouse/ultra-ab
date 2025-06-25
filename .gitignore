@@ -1,0 +1,77 @@
+# Created by .ignore support plugin (hsz.mobi)
+# IDEs and editors
+.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+#vscode junk
+.history/*
+.vscode/*
+.vstags
+
+# ds stores
+*.DS_Store
+
+# intellij
+*.idea/
+
+# certificates and private keys
+*.crt
+*.key
+
+# build artifacts
+get-pip.py
+
+# bin
+/bin/composer
+/bin/php
+
+# etc
+etc/php-fpm.conf
+etc/php/php.ini
+etc/php-fpm.d/php-fpm.conf
+etc/php-fpm.d/www.conf.default
+etc/php-fpm.conf.default
+etc/nginx/nginx.conf
+etc/nginx/ssl-params.conf
+etc/nginx/force-ssl.conf
+etc/ssl/certs/*
+etc/ssl/private/*
+etc/ssl/CA/*
+etc/supervisor/conf.d/supervisord.conf
+
+# opt
+opt/wordpress*/*
+opt/wordpress-*.zip
+opt/php*/*
+opt/openresty*/*
+
+# cache and logs
+var/*
+
+# tmp
+tmp/*
+
+# vendor
+vendor/*
+
+# node
+node_modules/
+
+# src
+src/next-js/dist
+src/vue/.vscode
+
+# web
+web/*
+
+# misc
+.ultra-ab-cfg.yml
+.ultra-ab-cfg.bak.yml
+commit.txt
+docker-compose.bak.yml
+docker-compose.yml

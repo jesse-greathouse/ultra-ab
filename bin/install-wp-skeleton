@@ -1,0 +1,88 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Cwd qw(abs_path);
+use File::Path qw(make_path);
+use File::Basename qw(dirname);
+
+my $binDir = abs_path(dirname(__FILE__));
+my $applicationRoot = abs_path(dirname($binDir));
+my $web = "$applicationRoot/web";
+my $var = "$applicationRoot/var";
+my $skeleton = "$applicationRoot/src/wordpress-skeleton";
+
+unlink_project($web);
+link_project($web, $skeleton);
+
+print "\n✅ WordPress skeleton symlinking complete.\n";
+print "→ Source: $skeleton\n";
+print "→ Linked into: $web\n\n";
+
+# ------------------------------------------
+# Subroutines
+# ------------------------------------------
+
+sub unlink_project {
+    my ($webDir) = @_;
+    my @topLevel = qw(languages images custom-config);
+    my @wpContent = qw(themes plugins mu-plugins uploads);
+
+    foreach my $folder (@topLevel) {
+        my $path = "$webDir/$folder";
+        if (-l $path) {
+            unlink $path or warn "Failed to unlink symlink $path: $!\n";
+        } elsif (-e $path) {
+            warn "⚠️  Skipping non-symlink path: $path (not a symlink)\n";
+        }
+    }
+
+    foreach my $folder (@wpContent) {
+        my $path = "$webDir/wp-content/$folder";
+        if (-l $path) {
+            unlink $path or warn "Failed to unlink symlink $path: $!\n";
+        } elsif (-e $path) {
+            warn "⚠️  Skipping non-symlink path: $path (not a symlink)\n";
+        }
+    }
+}
+
+sub link_project {
+    my ($webDir, $source) = @_;
+
+    my @topLevel = qw(languages images custom-config);
+    my $relativeSkelDir = "../src/wordpress-skeleton";
+    my $relativeUploadsDir = "../var/upload";
+    my %wpContent = (
+        'themes'     => "../$relativeSkelDir/themes",
+        'plugins'    => "../$relativeSkelDir/plugins",
+        'mu-plugins' => "../$relativeSkelDir/mu-plugins",
+        'uploads'    => "../$relativeUploadsDir",
+    );
+
+    # Save original working directory
+    my $originalCwd = Cwd::getcwd();
+
+    # Ensure wp-content directory exists
+    my $wpContentDir = "$webDir/wp-content";
+    make_path($wpContentDir) unless -d $wpContentDir;
+
+    # --- Link top-level symlinks from within $webDir
+    chdir($webDir) or die "Failed to chdir into $webDir: $!\n";
+
+    foreach my $folder (@topLevel) {
+        symlink("$relativeSkelDir/$folder", $folder)
+            or warn "Failed to symlink $folder → ../src/$folder: $!\n";
+    }
+
+    # --- Link wp-content/* from within wp-content/
+    chdir($wpContentDir) or die "Failed to chdir into $wpContentDir: $!\n";
+
+    foreach my $subdir (keys %wpContent) {
+        symlink($wpContent{$subdir}, $subdir)
+            or warn "Failed to symlink $subdir → $wpContent{$subdir}: $!\n";
+    }
+
+    # Restore original working directory
+    chdir($originalCwd) or warn "Failed to return to original directory: $!\n";
+}

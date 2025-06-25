@@ -1,0 +1,29 @@
+---
+meta:
+  IS_DOCKER: 'true'
+  SITE_NAME: ultraab
+  libyaml: 0.2.4
+nginx:
+  HOST_NAMES: 127.0.0.1 localhost
+  INCLUDE_FORCE_SSL: ''
+  IS_SSL: 'false'
+  PORT: '8686'
+  REDIS_DB: '0'
+  REDIS_HOST: ultraab_redis
+  REDIS_PASSWORD: 'null'
+  REDIS_PORT: '6379'
+  SSL: ''
+  SSL_CERT_LINE: ''
+  SSL_KEY_LINE: ''
+wordpress:
+  DB_HOST: ultraab_db
+  DB_NAME: ultraab
+  DB_PASSWORD: ultraab
+  DB_PORT: '3306'
+  DB_USER: ultraab
+  DEBUG: 'true'
+  REDIS_DB: '0'
+  REDIS_HOST: ultraab_redis
+  REDIS_PASSWORD: 'null'
+  REDIS_PORT: '6379'
+  SITE_URL: http://localhost:8686

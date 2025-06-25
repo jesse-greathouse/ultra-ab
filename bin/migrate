@@ -1,0 +1,115 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use File::Basename qw(dirname);
+use Cwd qw(abs_path);
+use Getopt::Long;
+
+use lib(dirname(abs_path(__FILE__)) . "/modules");
+use UltraAB::Config qw(get_configuration);
+use UltraAB::Db qw(
+    fetch_in_docker fetch_with_perl_dbi
+    run_sql_in_docker run_sql_with_perl_dbi
+);
+use UltraAB::System qw(docker_db_up);
+
+# Config and args
+my %cfg = get_configuration();
+
+my $is_docker = $cfg{meta}{IS_DOCKER} // 0;
+my $srcdir    = $cfg{meta}{SRC}      // die "Missing meta.SRC in config\n";
+my $nginxsrc  = $cfg{nginx}{SRC}     // die "Missing nginx.SRC in config\n";
+my $migrations_dir = "$srcdir/sql/migrations";
+
+# Ensures the ultraab_db container is up and healthy
+if ($is_docker) {
+    docker_db_up();
+    print "\n";
+}
+
+# Option parsing
+my $file;
+GetOptions("file=s" => \$file) or die "Usage: $0 [--file filename]\n";
+
+# Build query
+my $sql = "SELECT * FROM migrations";
+if ($file) {
+    $sql .= " WHERE filename = " . db_quote($file);
+}
+
+# Fetch migrations recordset
+my @rs = $is_docker
+    ? fetch_in_docker(\%cfg, $sql)
+    : fetch_with_perl_dbi(\%cfg, $sql);
+
+# Reduce to filenames only
+my @migratedFiles = map { $_->{filename} } @rs;
+
+# If --file and already applied, exit politely
+if ($file) {
+    if (grep { $_ eq $file } @migratedFiles) {
+        print "Migration $file has already been applied.\n";
+        exit 0;
+    }
+}
+
+# Gather migration files to apply
+my @to_apply;
+if ($file) {
+    my $path = "$migrations_dir/$file";
+    die "Migration file $file does not exist in $migrations_dir\n" unless -f $path;
+    @to_apply = ($file);
+} else {
+    opendir(my $dh, $migrations_dir) or die "Failed to open migrations dir: $!\n";
+    @to_apply = sort grep { /\.sql$/ && -f "$migrations_dir/$_" } readdir($dh);
+    closedir $dh;
+}
+
+# Apply migrations
+my $dispatched = 0;
+foreach my $mfile (@to_apply) {
+    if (grep { $_ eq $mfile } @migratedFiles) {
+        warn "Migration $mfile has already been applied; skipping.\n";
+        next;
+    }
+
+    my $host_path = "$migrations_dir/$mfile";
+    die "Migration file missing: $host_path\n" unless -f $host_path;
+    print "Applying migration $mfile ...\n";
+    my $cmd = "bin/db run '$host_path'";
+    my $rv = system($cmd);
+
+    if ($rv == 0) {
+      print "Migration $mfile applied successfully.\n";
+      $dispatched++;
+
+      my $insert_sql = sprintf(
+          "INSERT INTO migrations (filename, applied_at) VALUES (%s, NOW())",
+          db_quote($mfile)
+      );
+
+      if ($is_docker) {
+          run_sql_in_docker(\%cfg, $insert_sql);
+      } else {
+          run_sql_with_perl_dbi(\%cfg, $insert_sql);
+      }
+  } else {
+        die "Failed to apply migration $mfile (exit code $rv).\n";
+    }
+}
+
+if ($dispatched == 0) {
+    warn "\nNo eligible migrations to run.\n";
+}
+
+print "\n✅ Running migrations completed.\n";
+
+exit 0;
+
+# Helpers
+
+sub db_quote {
+    my ($s) = @_;
+    $s =~ s/'/''/g; # SQL-escape single quote
+    return "'$s'";
+}

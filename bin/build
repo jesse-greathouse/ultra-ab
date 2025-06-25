@@ -1,0 +1,56 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Cwd qw(abs_path);
+use File::Basename qw(dirname);
+use Getopt::Long;
+use lib(dirname(abs_path(__FILE__))  . "/modules");
+use UltraAB::Install qw(install_node node_build);
+
+# Load local project modules
+my $binDir = abs_path(dirname(__FILE__));
+my $applicationRoot = abs_path(dirname($binDir));
+
+# Parse options
+my $non_interactive = 0;
+GetOptions(
+    "non-interactive" => \$non_interactive,
+) or die("Error in command line arguments\n");
+
+# Environment
+my $expected_node_version = 'v22.16.0';  # Node version strings usually include a 'v' prefix
+my $node_cmd = `bash -c 'command -v node'`;
+chomp $node_cmd;
+
+# Detect current node version
+my $actual_version = '';
+if ($node_cmd) {
+    $actual_version = `bash -c 'node -v'`;
+    chomp $actual_version;
+}
+
+# Determine if install is needed
+if (!$actual_version || $actual_version ne $expected_node_version) {
+    print "Node.js $expected_node_version not detected (found: '$actual_version')\n";
+
+    if ($non_interactive) {
+        print "Running install_node in non-interactive mode...\n";
+        install_node($applicationRoot);
+    } else {
+        print "Would you like to install Node.js $expected_node_version using NVM? [y/N]: ";
+        my $response = <STDIN>;
+        chomp $response;
+        if ($response =~ /^y(es)?$/i) {
+            install_node($applicationRoot);
+        } else {
+            print "Aborting build. Required Node.js version not installed.\n";
+            exit 1;
+        }
+    }
+} else {
+    print "✅ Node.js $expected_node_version is active.\n";
+}
+
+# Run the microfrontend build
+node_build($applicationRoot);

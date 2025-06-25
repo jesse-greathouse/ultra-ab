@@ -1,0 +1,46 @@
+# Dependencies
+## Avoid any node_modules folders anywhere in the repo.
+node_modules
+## Avoid package*.json files only at repo root
+/package.json
+/package-lock.json
+
+# plugins
+/plugins/test-plugin-*
+
+# client-mu-plugins
+/client-mu-plugins/test-mu-plugin-*
+
+# themes
+/themes/test-theme-*
+
+# Uploads directory
+/uploads/
+
+# Leftover core/plugin upgrade files
+/upgrade/
+
+# mu-plugins; these are managed at the platform-level
+/mu-plugins/
+
+# drop-ins; these are managed at the platform-level
+/object-cache.php
+/db.php
+
+# Ignore temporary OS files
+.DS_Store
+.DS_Store?
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode
+.vstags
+commit.txt
+
+# Local PHPCS configuration files
+.phpcs.xml
+phpcs.xml
+
+# Composer (repo root only)
+/vendor/

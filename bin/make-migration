@@ -1,0 +1,47 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use File::Basename qw(dirname);
+use Cwd qw(abs_path);
+use POSIX qw(strftime);
+
+use lib(dirname(abs_path(__FILE__)) . "/modules");
+use UltraAB::Config qw(get_configuration);
+
+my %cfg = get_configuration();
+
+# Check arguments
+if (@ARGV < 1) {
+    die "Usage: $0 <description...>\n";
+}
+
+# Get db name from config
+my $dbname = $cfg{nginx}{DB_NAME} // die "Config missing {nginx}{DB_NAME}\n";
+
+# Create migrations dir if missing
+my $root = dirname(dirname(abs_path($0)));
+my $migrations_dir = "$root/src/sql/migrations";
+unless (-d $migrations_dir) {
+    mkdir "$root/src/sql" unless -d "$root/src/sql";
+    mkdir $migrations_dir or die "❌ Failed to create migrations directory: $!\n";
+}
+
+# Create filename
+my $datestr = strftime('%Y-%m-%d-%H-%M-%S', localtime);
+my $desc = join('-', @ARGV);
+$desc =~ s/[^a-zA-Z0-9\-]+/-/g;     # normalize, replace any non-alphanum with dash
+$desc =~ s/-+/-/g;                  # collapse multiple dashes
+$desc =~ s/^-|-$//g;                # trim leading/trailing dash
+my $filename = "${datestr}__${desc}.sql";
+my $filepath = "$migrations_dir/$filename";
+
+# Write boilerplate
+my $boilerplate = "use $dbname;\n\n";
+
+if (open my $fh, '>', $filepath) {
+    print $fh $boilerplate;
+    close $fh;
+    print "✅ Created migration: $filepath\n";
+} else {
+    die "❌ Failed to create migration: $filepath ($!)\n";
+}

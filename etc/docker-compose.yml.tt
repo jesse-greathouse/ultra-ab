@@ -1,0 +1,200 @@
+services:
+  nginx:
+    image: openresty/openresty:alpine
+    container_name: [% meta.SITE_NAME %]_openresty
+    volumes:
+      - [% meta.ETC %]/nginx:[% nginx.ETC %]
+      - [% meta.ETC %]/ssl:[% nginx.ETC %]/ssl
+      - [% meta.SRC %]:[% nginx.SRC %]
+      - [% meta.TMP %]:[% nginx.TMP %]
+      - [% meta.VAR %]/cache:[% nginx.CACHE_DIR %]
+      - [% meta.VAR %]/db_backups:[% nginx.VAR %]/db_backups
+      - [% meta.VAR %]/keys:[% nginx.VAR %]/keys
+      - [% meta.LOG_DIR %]:[% nginx.LOG_DIR %]
+      - [% meta.VAR %]/pid:[% nginx.VAR %]/pid
+      - [% meta.VAR %]/pools:[% nginx.VAR %]/pools
+      - [% meta.VAR %]/run:[% nginx.VAR %]/run
+      - [% meta.VAR %]/session:[% nginx.VAR %]/session
+      - [% meta.VAR %]/socket:[% nginx.VAR %]/socket
+      - [% meta.VAR %]/upload:[% nginx.VAR %]/upload
+      - [% meta.VAR %]/wp-cli:[% nginx.VAR %]/wp-cli
+      - [% meta.WEB %]:[% nginx.WEB %]
+    ports:
+      - "[% nginx.PORT %]:[% nginx.PORT %]"
+    depends_on:
+      - wordpress
+    networks:
+      - [% meta.SITE_NAME %]_net
+    environment:
+      USER: [% nginx.USER %]
+      DIR: [% nginx.DIR %]
+      BIN: [% nginx.BIN %]
+      ETC: [% nginx.ETC %]
+      OPT: [% nginx.OPT %]
+      SRC: [% nginx.SRC %]
+      TMP: [% nginx.TMP %]
+      VAR: [% nginx.VAR %]
+      WEB: [% nginx.WEB %]
+      CACHE_DIR: [% nginx.CACHE_DIR %]
+      LOG_DIR: [% nginx.LOG_DIR %]
+      LOG: [% nginx.LOG %]
+      PORT: [% nginx.PORT %]
+      REDIS_HOST: [% nginx.REDIS_HOST %]
+      REDIS_PORT: [% nginx.REDIS_PORT %]
+      REDIS_DB: [% nginx.REDIS_DB %]
+      REDIS_PASSWORD: [% nginx.REDIS_PASSWORD %]
+      SESSION_SECRET: [% nginx.SESSION_SECRET %]
+      APPLICATION_SECRET: [% nginx.APPLICATION_SECRET %]
+      IS_SSL: [% nginx.IS_SSL %]
+      SSL: [% nginx.SSL %]
+      SSL_CERT: [% nginx.SSL_CERT %]
+      SSL_KEY: [% nginx.SSL_KEY %]
+      HOST_NAMES: [% nginx.HOST_NAMES %]
+      DB_NAME: [% nginx.DB_NAME %]
+      DB_USER: [% nginx.DB_USER %]
+      DB_PASSWORD: [% nginx.DB_PASSWORD %]
+      DB_HOST: [% nginx.DB_HOST %]
+      DB_PORT: [% nginx.DB_PORT %]
+
+  wordpress:
+    image: wordpress:6.8-php8.4-fpm-alpine
+    container_name: [% meta.SITE_NAME %]_wp
+    depends_on:
+      - db
+    volumes:
+      - [% meta.BIN %]:[% wordpress.BIN %]
+      - [% meta.ETC %]:[% wordpress.ETC %]
+      - [% meta.ETC %]/php-fpm.d/php-fpm.conf:[% wordpress.ETC %]/php-fpm.conf
+      - [% meta.OPT %]:[% wordpress.OPT %]
+      - [% meta.SRC %]:[% wordpress.SRC %]
+      - [% meta.CACHE_DIR %]:[% wordpress.CACHE_DIR %]
+      - [% meta.VAR %]/db_backups:[% wordpress.VAR %]/db_backups
+      - [% meta.VAR %]/keys:[% wordpress.VAR %]/keys
+      - [% meta.LOG_DIR %]:[% wordpress.LOG_DIR %]
+      - [% meta.VAR %]/pid:[% wordpress.VAR %]/pid
+      - [% meta.VAR %]/pools:[% wordpress.VAR %]/pools
+      - [% meta.VAR %]/run:[% wordpress.VAR %]/run
+      - [% meta.VAR %]/session:[% wordpress.VAR %]/session
+      - [% meta.VAR %]/socket:[% wordpress.VAR %]/socket
+      - [% meta.VAR %]/upload:[% wordpress.VAR %]/upload
+      - [% meta.VAR %]/wp-cli:[% wordpress.VAR %]/wp-cli
+      - [% meta.TMP %]:[% wordpress.TMP %]
+      - [% meta.WEB %]:[% wordpress.WEB %]
+    networks:
+      - [% meta.SITE_NAME %]_net
+    environment:
+      USER: [% wordpress.USER %]
+      DIR: [% wordpress.DIR %]
+      BIN: [% wordpress.BIN %]
+      ETC: [% wordpress.ETC %]
+      OPT: [% wordpress.OPT %]
+      SRC: [% wordpress.SRC %]
+      TMP: [% wordpress.TMP %]
+      VAR: [% wordpress.VAR %]
+      WEB: [% wordpress.WEB %]
+      CACHE_DIR: [% wordpress.CACHE_DIR %]
+      LOG_DIR: [% wordpress.LOG_DIR %]
+      LOG: [% wordpress.LOG %]
+      PORT: [% wordpress.PORT %]
+      REDIS_HOST: [% wordpress.REDIS_HOST %]
+      REDIS_PORT: [% wordpress.REDIS_PORT %]
+      REDIS_DB: [% wordpress.REDIS_DB %]
+      REDIS_PASSWORD: [% wordpress.REDIS_PASSWORD %]
+      DB_NAME: [% wordpress.DB_NAME %]
+      DB_USER: [% wordpress.DB_USER %]
+      DB_PASSWORD: [% wordpress.DB_PASSWORD %]
+      DB_HOST: [% wordpress.DB_HOST %]
+      DB_PORT: [% wordpress.DB_PORT %]
+
+  wpcli:
+    image: wordpress:cli-php8.4
+    container_name: [% meta.SITE_NAME %]_wpcli
+    depends_on:
+      - db
+    entrypoint: ["wp"]
+    command: ["--info"]
+    volumes:
+      - [% meta.BIN %]:[% wordpress.BIN %]
+      - [% meta.ETC %]:[% wordpress.ETC %]
+      - [% meta.OPT %]:[% wordpress.OPT %]
+      - [% meta.SRC %]:[% wordpress.SRC %]
+      - [% meta.CACHE_DIR %]:[% wordpress.CACHE_DIR %]
+      - [% meta.VAR %]/db_backups:[% wordpress.VAR %]/db_backups
+      - [% meta.VAR %]/keys:[% wordpress.VAR %]/keys
+      - [% meta.LOG_DIR %]:[% wordpress.LOG_DIR %]
+      - [% meta.VAR %]/pid:[% wordpress.VAR %]/pid
+      - [% meta.VAR %]/pools:[% wordpress.VAR %]/pools
+      - [% meta.VAR %]/run:[% wordpress.VAR %]/run
+      - [% meta.VAR %]/session:[% wordpress.VAR %]/session
+      - [% meta.VAR %]/socket:[% wordpress.VAR %]/socket
+      - [% meta.VAR %]/upload:[% wordpress.VAR %]/upload
+      - [% meta.VAR %]/wp-cli:[% wordpress.VAR %]/wp-cli
+      - [% meta.TMP %]:[% wordpress.TMP %]
+      - [% meta.WEB %]:[% wordpress.WEB %]
+    networks:
+      - [% meta.SITE_NAME %]_net
+    environment:
+      USER: [% wordpress.USER %]
+      DIR: [% wordpress.DIR %]
+      BIN: [% wordpress.BIN %]
+      ETC: [% wordpress.ETC %]
+      OPT: [% wordpress.OPT %]
+      SRC: [% wordpress.SRC %]
+      TMP: [% wordpress.TMP %]
+      VAR: [% wordpress.VAR %]
+      WEB: [% wordpress.WEB %]
+      CACHE_DIR: [% wordpress.CACHE_DIR %]
+      LOG_DIR: [% wordpress.LOG_DIR %]
+      LOG: [% wordpress.LOG %]
+      PORT: [% wordpress.PORT %]
+      REDIS_HOST: [% wordpress.REDIS_HOST %]
+      REDIS_PORT: [% wordpress.REDIS_PORT %]
+      REDIS_DB: [% wordpress.REDIS_DB %]
+      REDIS_PASSWORD: [% wordpress.REDIS_PASSWORD %]
+      DB_NAME: [% wordpress.DB_NAME %]
+      DB_USER: [% wordpress.DB_USER %]
+      DB_PASSWORD: [% wordpress.DB_PASSWORD %]
+      DB_HOST: [% wordpress.DB_HOST %]
+      DB_PORT: [% wordpress.DB_PORT %]
+
+  db:
+    image: mariadb:11
+    container_name: [% meta.SITE_NAME %]_db
+    environment:
+      MYSQL_DATABASE: [% wordpress.DB_NAME %]
+      MYSQL_USER: [% wordpress.DB_USER %]
+      MYSQL_PASSWORD: [% wordpress.DB_PASSWORD %]
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+      - [% meta.SRC %]:[% nginx.SRC %]
+      - [% meta.TMP %]:[% nginx.TMP %]
+      - [% meta.SRC %]/sql/initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - [% meta.SITE_NAME %]_net
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 5s
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: [% meta.SITE_NAME %]_redis
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --dir /data
+    volumes:
+      - redis_data:/data
+    networks:
+      - [% meta.SITE_NAME %]_net
+
+volumes:
+  db_data:
+  redis_data:
+
+networks:
+  [% meta.SITE_NAME %]_net:

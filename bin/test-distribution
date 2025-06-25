@@ -1,0 +1,135 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Getopt::Long qw(GetOptions);
+use LWP::UserAgent;
+use HTTP::Request;
+use Time::HiRes qw(gettimeofday tv_interval);
+use File::Basename qw(dirname);
+use Cwd qw(abs_path);
+
+# Project-specific module path
+use lib(dirname(abs_path(__FILE__)) . "/modules");
+use UltraAB::Config qw(get_configuration);
+
+# Load configuration
+my %cfg = get_configuration();
+
+my $total_sessions = 100;
+my $throttle = 0;  # in seconds (fractional OK)
+GetOptions(
+    "total_sessions=i" => \$total_sessions,
+    "throttle=f"       => \$throttle,
+) or die "Usage: $0 [--total_sessions=N] [--throttle=SECONDS]\n";
+
+my $site_url = $cfg{wordpress}{SITE_URL} or die "SITE_URL not found in config!\n";
+$site_url =~ s#/$##;  # Remove trailing slash if present
+
+print "Testing $total_sessions unique sessions against $site_url\n";
+print "Making requests now...\n";
+
+my %buckets = (
+    A => 0,  # Next.js
+    B => 0,  # Vue
+    C => 0,  # WordPress (default)
+);
+
+my %seen_sessions;
+my $ua = LWP::UserAgent->new(
+    timeout => 10,
+    agent   => "UltraAB-Test/1.0",
+);
+
+my $attempts = 0;
+my $unique   = 0;
+my $duplicates = 0;
+my $total_time = 0;
+
+my $bench_start = [gettimeofday];
+
+while ($unique < $total_sessions) {
+    $attempts++;
+    my $req = HTTP::Request->new(GET => $site_url . '/');
+    $req->header('Cookie' => '');  # No cookies; force new session
+    $req->header('Connection' => 'close'); # Maybe prevents Nginx from re-using the connection.
+
+    my $start_time = [gettimeofday];
+    my $res = $ua->request($req);
+    my $elapsed = tv_interval($start_time);
+
+    # Extract ab_sid from Set-Cookie header
+    my $sid;
+    foreach my $scookie ($res->header('Set-Cookie')) {
+        if ($scookie =~ /ab_sid=([a-f0-9\-]+)/i) {
+            $sid = $1;
+            last;
+        }
+    }
+
+    if (!$sid) {
+        # Do not count against unique or timing
+        next;
+    }
+    if ($seen_sessions{$sid}) {
+        $duplicates++;
+        next;
+    }
+    $seen_sessions{$sid} = 1;
+    $unique++;
+
+    my $bucket = detect_bucket($res);
+
+    # Only tally timing for successful, non-duplicate, non-skipped requests
+    $total_time += $elapsed;
+
+    $buckets{$bucket}++ if $bucket;
+
+    select(undef, undef, undef, $throttle) if $throttle;
+}
+
+my $bench_end = [gettimeofday];
+my $overall_time = tv_interval($bench_start, $bench_end);
+
+print "\n==== DISTRIBUTION SUMMARY ====\n";
+printf "A (Next.js):     %3d\n", $buckets{A};
+printf "B (Vue):         %3d\n", $buckets{B};
+printf "C (WordPress):   %3d\n", $buckets{C};
+printf "TOTAL:           %3d\n", $buckets{A} + $buckets{B} + $buckets{C};
+print  "\n";
+printf "Total HTTP requests made: %d\n", $attempts;
+printf "Duplicate sessions skipped: %d\n", $duplicates;
+printf "Total elapsed wall time: %.3f seconds\n", $overall_time;
+printf "Total HTTP request time: %.3f seconds\n", $total_time;
+printf "Average HTTP time per unique session request: %.3f seconds\n",
+    $unique ? $total_time / $unique : 0;
+
+sub detect_bucket {
+    my ($res) = @_;
+
+    # Option 1: Detect by redirect
+    if ($res->is_redirect) {
+        my $loc = $res->header('Location') || '';
+        if ($loc =~ m!/next/!)      { return 'A'; }
+        if ($loc =~ m!/vue/!)       { return 'B'; }
+        if ($loc =~ m!/$! || $loc =~ m!/index\.php!) { return 'C'; }
+    }
+
+    my $content = $res->decoded_content;
+
+    # Option 2: Detect by unique content
+    if ($content =~ /<title>Vite \+ Vue \+ TS<\/title>/i) { return 'B'; }
+    if ($content =~ /Next\.js/i)                          { return 'A'; }
+    if ($content =~ /WordPress/i)                         { return 'C'; }
+
+    # Option 3: Favicon as a backup
+    if ($content =~ /href="\/assets\/vite\.svg"/i)        { return 'B'; }
+
+    # Option 4: Custom header
+    my $bucket_header = $res->header('X-Bucket');
+    if ($bucket_header && $bucket_header =~ /^[ABC]$/) {
+        return $bucket_header;
+    }
+
+    return undef;
+}
