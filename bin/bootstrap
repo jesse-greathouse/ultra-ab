@@ -102,28 +102,6 @@ Recommended:
 EOF
 }
 
-# --- Step 1.4: Detect Composer ---
-sub have_composer {
-    return -x "$ENV{PWD}/bin/composer"
-        || scalar(grep { -x "$_\/composer" } split /$Config{path_sep}/, $ENV{PATH})
-        || do {
-            my $out = qx(composer --version 2>&1);
-            $out = '' unless defined $out;
-            $out =~ /Composer version/;
-        };
-}
-
-unless (have_composer()) {
-    die <<"EOF";
-
-❌ Composer is not installed or not in your PATH.
-
-To install Composer, run:
-    bin/install --composer
-
-EOF
-}
-
 # --- Step 2: Locate cpanm ---
 my $cpanm = find_in_path('cpanm')
     || find_in_path('cpanm', "$ENV{HOME}/perl5/bin");
