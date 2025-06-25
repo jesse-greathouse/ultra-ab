@@ -414,7 +414,7 @@ sub install_composer_dependencies {
     my $srcDir = $dir . '/web';
     my $vendorDir = $srcDir . '/vendor';
     my $phpLocal = $dir . '/opt/php/bin/php';
-    my $phpExecutable = = (-x $phpLocal) ? $phpLocal : 'php';
+    my $phpExecutable = (-x $phpLocal) ? $phpLocal : 'php';
     my $composerExecutable = "$phpExecutable $binDir/composer";
     my $composerInstallCommand = "$composerExecutable install";
 

@@ -174,9 +174,17 @@ sub copy_package {
     my $src = "$wordpressDir/$file";
     my $dest = "$webDir/$file";
 
-    # Clean any existing file or symlink at destination
+    # Clean any existing file, symlink, or directory at destination
     if (-e $dest || -l $dest) {
-      unlink $dest or warn "Failed to remove $dest: $!";
+        # Try unlink (works for files and symlinks)
+        unless (unlink $dest) {
+            # If it's a directory, try rmtree
+            if (-d $dest) {
+                rmtree($dest) or warn "Failed to remove directory $dest: $!";
+            } else {
+                warn "Failed to remove $dest: $!";
+            }
+        }
     }
 
     if (-d $src) {
