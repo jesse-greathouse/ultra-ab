@@ -219,7 +219,14 @@ sub update_wp_cli_bundle {
   my $cwd = getcwd();
 
   unless (-x $composer) {
-    die "Error: Composer binary not found or not executable at $composer\n";
+    print "Composer binary not found at $composer, attempting to install via bin/install --composer...\n";
+    my $install_composer_cmd = "$binDir/install --composer";
+    system($install_composer_cmd) == 0
+      or die "Error: Failed to run 'bin/install --composer'. Composer could not be installed.\n";
+
+    unless (-x $composer) {
+      die "Error: Composer binary still not found or not executable at $composer after attempted installation.\n";
+    }
   }
 
   unless (-f "$web/composer.json") {
