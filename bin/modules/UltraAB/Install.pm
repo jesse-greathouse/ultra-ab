@@ -359,7 +359,8 @@ sub install_wordpress_cli {
     my $binDir     = "$dir/bin";
     my $vendorDir  = "$dir/web/vendor";
     my $composer   = "$binDir/composer";
-    my $php        = "$dir/opt/php/bin/php";
+    my $phpLocal   = "$dir/opt/php/bin/php";
+    my $php         = (-x $phpLocal) ? $phpLocal : 'php';
 
     # Ensure vendor dir exists
     make_path($vendorDir) unless -d $vendorDir;
@@ -373,7 +374,8 @@ sub install_wordpress_cli {
 # installs Composer.
 sub install_composer {
     my ($dir) = @_;
-    my $phpExecutable = $dir . '/opt/php/bin/php';
+    my $phpLocal = $dir . '/opt/php/bin/php';
+    my $phpExecutable = (-x $phpLocal) ? $phpLocal : 'php';
     my $composerInstallScript = $binDir . '/composer-setup.php';
     my $composerHash = 'dac665fdc30fdd8ec78b38b9800061b4150413ff2e3b6f88543c636f7cd84f6db9189d43a81e5503cda447da73c7e5b6';
     my $composerDownloadCommand = "$phpExecutable -r \"copy('https://getcomposer.org/installer', '$composerInstallScript');\"";
@@ -411,7 +413,8 @@ sub install_composer_dependencies {
     my $originalDir = getcwd();
     my $srcDir = $dir . '/web';
     my $vendorDir = $srcDir . '/vendor';
-    my $phpExecutable = $dir . '/opt/php/bin/php';
+    my $phpLocal = $dir . '/opt/php/bin/php';
+    my $phpExecutable = = (-x $phpLocal) ? $phpLocal : 'php';
     my $composerExecutable = "$phpExecutable $binDir/composer";
     my $composerInstallCommand = "$composerExecutable install";
 

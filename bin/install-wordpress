@@ -16,9 +16,10 @@ use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 # Dynamically resolve paths
 my $binDir = abs_path(dirname(__FILE__));
 my $applicationRoot   = abs_path(dirname($binDir));
-my $opt    = "$applicationRoot/opt";
-my $web    = "$applicationRoot/web";
-my $php    = "$opt/php/bin/php";
+my $opt       = "$applicationRoot/opt";
+my $web       = "$applicationRoot/web";
+my $phpLocal  = "$opt/php/bin/php";
+my $php       = (-x $phpLocal) ? $phpLocal : 'php';
 
 my $argnum;
 my @versions;
