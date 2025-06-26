@@ -1,8 +1,11 @@
 requires 'JSON';
+requires 'Encode::Locale';
 requires 'Archive::Zip';
 requires 'Bytes::Random::Secure';
 requires 'Config::File';
+requires 'Clone';
 requires 'DBI';
+requires 'HTTP::Date';
 requires 'LWP::Protocol::https';
 requires 'LWP::UserAgent';
 requires 'File::Copy::Recursive';
@@ -19,4 +22,5 @@ requires 'Term::Menus';
 requires 'Term::Prompt';
 requires 'Term::ReadKey';
 requires 'Text::Wrap';
+requires 'Try::Tiny';
 requires 'YAML::XS';
