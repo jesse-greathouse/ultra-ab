@@ -15,10 +15,10 @@ services:
       - [% meta.VAR %]/pools:[% nginx.VAR %]/pools
       - [% meta.VAR %]/run:[% nginx.VAR %]/run
       - [% meta.VAR %]/session:[% nginx.VAR %]/session
-      - [% meta.VAR %]/socket:[% nginx.VAR %]/socket
       - [% meta.VAR %]/upload:[% nginx.VAR %]/upload
       - [% meta.VAR %]/wp-cli:[% nginx.VAR %]/wp-cli
       - [% meta.WEB %]:[% nginx.WEB %]
+      - sockets:[% nginx.VAR %]/socket
     ports:
       - "[% nginx.PORT %]:[% nginx.PORT %]"
     depends_on:
@@ -75,11 +75,11 @@ services:
       - [% meta.VAR %]/pools:[% wordpress.VAR %]/pools
       - [% meta.VAR %]/run:[% wordpress.VAR %]/run
       - [% meta.VAR %]/session:[% wordpress.VAR %]/session
-      - [% meta.VAR %]/socket:[% wordpress.VAR %]/socket
       - [% meta.VAR %]/upload:[% wordpress.VAR %]/upload
       - [% meta.VAR %]/wp-cli:[% wordpress.VAR %]/wp-cli
       - [% meta.TMP %]:[% wordpress.TMP %]
       - [% meta.WEB %]:[% wordpress.WEB %]
+      - sockets:[% wordpress.VAR %]/socket
     networks:
       - [% meta.SITE_NAME %]_net
     environment:
@@ -126,11 +126,11 @@ services:
       - [% meta.VAR %]/pools:[% wordpress.VAR %]/pools
       - [% meta.VAR %]/run:[% wordpress.VAR %]/run
       - [% meta.VAR %]/session:[% wordpress.VAR %]/session
-      - [% meta.VAR %]/socket:[% wordpress.VAR %]/socket
       - [% meta.VAR %]/upload:[% wordpress.VAR %]/upload
       - [% meta.VAR %]/wp-cli:[% wordpress.VAR %]/wp-cli
       - [% meta.TMP %]:[% wordpress.TMP %]
       - [% meta.WEB %]:[% wordpress.WEB %]
+      - sockets:[% wordpress.VAR %]/socket
     networks:
       - [% meta.SITE_NAME %]_net
     environment:
@@ -195,6 +195,7 @@ services:
 volumes:
   db_data:
   redis_data:
+  sockets:
 
 networks:
   [% meta.SITE_NAME %]_net:
